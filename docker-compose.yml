@@ -33,6 +33,8 @@ services:
         "--port",
         "8000",
         "--reload",
+        "--reload--include",
+        "*",
       ]
 
   minio:
