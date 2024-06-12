@@ -11,31 +11,28 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1m
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   web:
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db/postgres
     ports:
       - "8000:8000"
     volumes:
       - .:/app
-    command:
-      [
-        "uvicorn",
-        "app.main:app",
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--reload",
-        "--reload-include",
-        "*",
-      ]
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-include *
 
   minio:
     image: minio/minio
@@ -47,6 +44,16 @@ services:
       - "9000:9000"
     volumes:
       - minio_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:9000/minio/health/live || exit 1",
+        ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   media:
     build:
@@ -56,7 +63,8 @@ services:
       MINIO_ACCESS_KEY: minio
       MINIO_SECRET_KEY: minio123
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     ports:
       - "8001:8001"
 
