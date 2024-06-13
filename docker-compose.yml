@@ -65,8 +65,8 @@ services:
     depends_on:
       minio:
         condition: service_healthy
-    ports:
-      - "8001:8001"
+    # ports:
+    #   - "8001:8001"
 
 volumes:
   postgres_data:
