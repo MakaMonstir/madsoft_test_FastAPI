@@ -15,5 +15,6 @@ class MemeUpdate(MemeBase):
 class Meme(MemeUpdate):
     id: int
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        'from_attributes': True
+    }
